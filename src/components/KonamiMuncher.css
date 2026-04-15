@@ -17,7 +17,7 @@
 .konami-title {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--color-white);
+  color: white;
   letter-spacing: 0.02em;
   display: flex;
 }
@@ -39,6 +39,12 @@
   transition: left 0.1s linear;
 }
 
+/* Facing right (eating forward) */
+.konami-pac--forward {
+  transform: translateY(-50%);
+}
+
+/* Facing left (rebuilding / going back) */
 .konami-pac--reverse {
   transform: translateY(-50%) scaleX(-1);
 }
@@ -59,25 +65,23 @@
   background: #1a1a1a;
   border-radius: 50%;
   top: 6px;
-  right: 8px;
+  left: 14px;
 }
 
+/* Mouth opens to the RIGHT — pac-man faces right */
 @keyframes chomp-mouth {
   0%, 100% {
     clip-path: polygon(
-      100% 0%, 100% 100%, 50% 50%,
-      0% 100%, 0% 0%
+      0% 0%, 100% 0%, 100% 100%, 0% 100%
     );
   }
   50% {
     clip-path: polygon(
-      100% 0%, 100% 100%, 50% 50%,
-      0% 85%, 0% 15%
+      0% 0%, 100% 35%, 100% 65%, 0% 100%
     );
   }
 }
 
-/* Override for dark theme */
 [data-theme="dark"] .konami-title {
   color: #f0f0f0;
 }

@@ -1,13 +1,54 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import './KonamiMuncher.css';
 
 const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 const TITLE = 'Comment Muncher';
 
+function playBlip() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.08);
+    setTimeout(() => ctx.close(), 200);
+  } catch {
+    // Audio not available — silent fallback
+  }
+}
+
+function playRestore() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+    setTimeout(() => ctx.close(), 200);
+  } catch {
+    // Audio not available — silent fallback
+  }
+}
+
 export default function KonamiMuncher() {
   const [sequence, setSequence] = useState<string[]>([]);
   const [phase, setPhase] = useState<'idle' | 'eating' | 'rebuilding' | 'done'>('idle');
   const [eatIndex, setEatIndex] = useState(-1);
+  const prevEatIndex = useRef(-1);
 
   // Listen for Konami code
   useEffect(() => {
@@ -26,14 +67,13 @@ export default function KonamiMuncher() {
     }
   }, [phase]);
 
-  // Eating animation — chomp one letter at a time
+  // Eating animation
   useEffect(() => {
     if (phase !== 'eating') return;
     if (eatIndex < TITLE.length - 1) {
       const timer = setTimeout(() => setEatIndex(i => i + 1), 120);
       return () => clearTimeout(timer);
     } else {
-      // All eaten — pause, then rebuild
       const timer = setTimeout(() => {
         setPhase('rebuilding');
         setEatIndex(TITLE.length - 1);
@@ -42,7 +82,7 @@ export default function KonamiMuncher() {
     }
   }, [phase, eatIndex]);
 
-  // Rebuilding animation — letters reappear one at a time from the end
+  // Rebuilding animation
   useEffect(() => {
     if (phase !== 'rebuilding') return;
     if (eatIndex >= 0) {
@@ -51,29 +91,37 @@ export default function KonamiMuncher() {
     } else {
       const timer = setTimeout(() => {
         setPhase('done');
-        // Reset after a beat so it can be triggered again
         setTimeout(() => {
           setPhase('idle');
           setSequence([]);
           setEatIndex(-1);
+          prevEatIndex.current = -1;
         }, 2000);
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [phase, eatIndex]);
 
+  // Play sounds on index change
+  useEffect(() => {
+    if (phase === 'eating' && eatIndex > prevEatIndex.current) {
+      playBlip();
+    } else if (phase === 'rebuilding' && eatIndex < prevEatIndex.current) {
+      playRestore();
+    }
+    prevEatIndex.current = eatIndex;
+  }, [phase, eatIndex]);
+
   const reset = useCallback(() => {
     setPhase('idle');
     setSequence([]);
     setEatIndex(-1);
+    prevEatIndex.current = -1;
   }, []);
 
   if (phase === 'idle' || phase === 'done') return null;
 
-  // Pac-man position: aligned with the letter being eaten
-  const pacLeft = phase === 'eating'
-    ? `${(eatIndex + 1) * 0.78}em`
-    : `${(eatIndex + 1) * 0.78}em`;
+  const pacLeft = `${(eatIndex + 1) * 0.78}em`;
 
   return (
     <div className="konami-overlay" onClick={reset}>
@@ -92,7 +140,7 @@ export default function KonamiMuncher() {
           })}
         </div>
         <div
-          className={`konami-pac${phase === 'rebuilding' ? ' konami-pac--reverse' : ''}`}
+          className={`konami-pac ${phase === 'rebuilding' ? 'konami-pac--reverse' : 'konami-pac--forward'}`}
           style={{ left: pacLeft }}
         >
           <div className="konami-pac__body">
