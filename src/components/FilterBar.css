@@ -26,6 +26,7 @@
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
   color: var(--color-base-darkest);
+  background: var(--color-white);
 }
 
 .filter-bar__search::placeholder {
