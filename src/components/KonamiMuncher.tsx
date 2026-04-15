@@ -45,7 +45,7 @@ function playRestore() {
 }
 
 export default function KonamiMuncher() {
-  const [sequence, setSequence] = useState<string[]>([]);
+  const [, setSequence] = useState<string[]>([]);
   const [phase, setPhase] = useState<'idle' | 'eating' | 'rebuilding' | 'done'>('idle');
   const [pacPos, setPacPos] = useState(-1);
   const [eatenLetters, setEatenLetters] = useState<Set<number>>(new Set());
