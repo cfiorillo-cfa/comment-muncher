@@ -82,7 +82,7 @@ export default function KonamiMuncher() {
           setEatenLetters(prev => new Set(prev).add(next));
           return next;
         });
-      }, 130);
+      }, 65);
       return () => clearTimeout(timer);
     } else {
       // All eaten — pause, then rebuild
@@ -106,7 +106,7 @@ export default function KonamiMuncher() {
           });
           return i - 1;
         });
-      }, 80);
+      }, 40);
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
