@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Comment } from '../types';
 import { generateCsv } from '../export/export-csv';
 import { generateXlsxBlob } from '../export/export-xlsx';
 import { triggerDownload } from '../export/trigger-download';
 import { getAccessToken } from '../google/auth';
 import { exportToSheets } from '../google/export-sheets';
+
+type ExportFormat = 'csv' | 'xlsx' | 'sheets';
 
 interface ExportButtonsProps {
   comments: Comment[];
@@ -20,16 +22,31 @@ export default function ExportButtons({
   const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
   const [sheetsError, setSheetsError] = useState('');
   const [sheetsLoading, setSheetsLoading] = useState(false);
+  const [preferredFormat, setPreferredFormat] = useState<ExportFormat>('xlsx');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('preferredExport') as ExportFormat | null;
+    if (stored === 'csv' || stored === 'xlsx' || stored === 'sheets') {
+      setPreferredFormat(stored);
+    }
+  }, []);
+
+  function savePreference(format: ExportFormat) {
+    localStorage.setItem('preferredExport', format);
+    setPreferredFormat(format);
+  }
 
   function handleCsv() {
     const csv = generateCsv(comments, hasThreading);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     triggerDownload(blob, `${filename}_comments.csv`);
+    savePreference('csv');
   }
 
   function handleXlsx() {
     const blob = generateXlsxBlob(comments, hasThreading);
     triggerDownload(blob, `${filename}_comments.xlsx`);
+    savePreference('xlsx');
   }
 
   const handleSheets = useCallback(async () => {
@@ -40,6 +57,7 @@ export default function ExportButtons({
       const token = await getAccessToken();
       const url = await exportToSheets(comments, filename, hasThreading, token);
       setSheetsUrl(url);
+      savePreference('sheets');
     } catch (err) {
       setSheetsError(err instanceof Error ? err.message : 'Export failed');
     } finally {
@@ -56,6 +74,12 @@ export default function ExportButtons({
     border: 'none',
   };
 
+  const primaryStyle: React.CSSProperties = {
+    ...buttonBase,
+    background: 'var(--color-primary)',
+    color: 'var(--color-white)',
+  };
+
   const outlinedStyle: React.CSSProperties = {
     ...buttonBase,
     background: 'var(--color-white)',
@@ -66,14 +90,10 @@ export default function ExportButtons({
   return (
     <div>
       <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-        <button onClick={handleCsv} style={outlinedStyle}>CSV</button>
+        <button onClick={handleCsv} style={preferredFormat === 'csv' ? primaryStyle : outlinedStyle}>CSV</button>
         <button
           onClick={handleXlsx}
-          style={{
-            ...buttonBase,
-            background: 'var(--color-primary)',
-            color: 'var(--color-white)',
-          }}
+          style={preferredFormat === 'xlsx' ? primaryStyle : outlinedStyle}
         >
           XLSX
         </button>
@@ -81,7 +101,7 @@ export default function ExportButtons({
           onClick={handleSheets}
           disabled={sheetsLoading}
           style={{
-            ...outlinedStyle,
+            ...(preferredFormat === 'sheets' ? primaryStyle : outlinedStyle),
             opacity: sheetsLoading ? 0.6 : 1,
             cursor: sheetsLoading ? 'not-allowed' : 'pointer',
           }}
