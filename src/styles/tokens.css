@@ -30,6 +30,23 @@
   --focus-offset: 2px;
 }
 
+[data-theme="dark"] {
+  --color-primary: #73b3e7;
+  --color-primary-dark: #97c9f0;
+  --color-base-darkest: #f0f0f0;
+  --color-base-dark: #c9c9c9;
+  --color-base: #a9aeb1;
+  --color-base-light: #71767a;
+  --color-base-lighter: #3d4551;
+  --color-base-lightest: #2d2d2d;
+  --color-white: #1a1a1a;
+  --color-success: #5abf5a;
+  --color-success-lighter: #1e3a1e;
+  --color-error: #f06060;
+  --color-error-lighter: #3a1e1e;
+  --color-focus: #73b3e7;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
