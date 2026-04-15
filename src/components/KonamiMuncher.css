@@ -23,61 +23,61 @@
 }
 
 .konami-letter {
-  transition: opacity 0.1s, transform 0.1s;
+  transition: opacity 0.08s, transform 0.08s;
   display: inline-block;
 }
 
 .konami-letter--eaten {
   opacity: 0;
-  transform: scale(0.3);
+  transform: scale(0);
 }
 
 .konami-pac {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
   transition: left 0.1s linear;
 }
 
-/* Facing right (eating forward) */
 .konami-pac--forward {
   transform: translateY(-50%);
 }
 
-/* Facing left (rebuilding / going back) */
 .konami-pac--reverse {
   transform: translateY(-50%) scaleX(-1);
 }
 
 .konami-pac__body {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
   background: #ffcc00;
   border-radius: 50%;
-  position: relative;
-  animation: chomp-mouth 0.25s ease-in-out infinite;
+  animation: chomp 0.25s linear infinite;
 }
 
-.konami-pac__eye {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: #1a1a1a;
-  border-radius: 50%;
-  top: 6px;
-  left: 14px;
-}
-
-/* Mouth opens to the RIGHT — pac-man faces right */
-@keyframes chomp-mouth {
+/* Right-facing pac-man: wedge opens on the right side */
+@keyframes chomp {
   0%, 100% {
+    /* Mouth closed */
     clip-path: polygon(
-      0% 0%, 100% 0%, 100% 100%, 0% 100%
+      50% 50%,
+      100% 50%,
+      100% 0%,
+      0% 0%,
+      0% 100%,
+      100% 100%,
+      100% 50%
     );
   }
   50% {
+    /* Mouth open */
     clip-path: polygon(
-      0% 0%, 100% 35%, 100% 65%, 0% 100%
+      50% 50%,
+      100% 15%,
+      100% 0%,
+      0% 0%,
+      0% 100%,
+      100% 100%,
+      100% 85%
     );
   }
 }
