@@ -1,0 +1,83 @@
+.konami-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.konami-stage {
+  position: relative;
+  padding: var(--space-8);
+}
+
+.konami-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-white);
+  letter-spacing: 0.02em;
+  display: flex;
+}
+
+.konami-letter {
+  transition: opacity 0.1s, transform 0.1s;
+  display: inline-block;
+}
+
+.konami-letter--eaten {
+  opacity: 0;
+  transform: scale(0.3);
+}
+
+.konami-pac {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: left 0.1s linear;
+}
+
+.konami-pac--reverse {
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.konami-pac__body {
+  width: 2.4rem;
+  height: 2.4rem;
+  background: #ffcc00;
+  border-radius: 50%;
+  position: relative;
+  animation: chomp-mouth 0.25s ease-in-out infinite;
+}
+
+.konami-pac__eye {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  top: 6px;
+  right: 8px;
+}
+
+@keyframes chomp-mouth {
+  0%, 100% {
+    clip-path: polygon(
+      100% 0%, 100% 100%, 50% 50%,
+      0% 100%, 0% 0%
+    );
+  }
+  50% {
+    clip-path: polygon(
+      100% 0%, 100% 100%, 50% 50%,
+      0% 85%, 0% 15%
+    );
+  }
+}
+
+/* Override for dark theme */
+[data-theme="dark"] .konami-title {
+  color: #f0f0f0;
+}

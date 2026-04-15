@@ -12,6 +12,7 @@ import CommentStats from './components/CommentStats';
 import CommentTable from './components/CommentTable';
 import ExportButtons from './components/ExportButtons';
 import ErrorMessage from './components/ErrorMessage';
+import KonamiMuncher from './components/KonamiMuncher';
 import './App.css';
 
 type AppState =
@@ -118,6 +119,7 @@ export default function App() {
           </div>
         </div>
       )}
+      <KonamiMuncher />
       {state.view === 'upload' && (
         <>
           <DropZone onFile={handleFile} onError={handleError} />
