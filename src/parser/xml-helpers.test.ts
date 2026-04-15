@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getTextContent, parseXml, W_NS } from './xml-helpers';
+import { getTextContent, parseXml } from './xml-helpers';
 
 describe('parseXml', () => {
   it('parses valid XML', () => {
