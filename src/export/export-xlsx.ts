@@ -1,12 +1,39 @@
 import * as XLSX from 'xlsx';
 import type { Comment } from '../types';
-import { buildExportData } from './build-rows';
 
 export function generateXlsxBlob(comments: Comment[], hasThreading: boolean): Blob {
-  const { headers, rows } = buildExportData(comments, hasThreading);
+  const headers = hasThreading
+    ? ['Thread', 'Reply', 'Author', 'Date', 'Comment', 'Highlighted Text', 'Location', 'Resolved']
+    : ['Author', 'Date', 'Comment', 'Highlighted Text', 'Location'];
 
-  const wsData = [headers, ...rows];
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const rows = comments.map(c => {
+    const date = new Date(c.date);
+    const validDate = isNaN(date.getTime()) ? c.date : date;
+
+    const base: unknown[] = [c.author, validDate, c.text, c.highlightedContent, c.location];
+    if (hasThreading) {
+      return [
+        c.threadId,
+        c.isReply,
+        ...base,
+        c.resolved === null ? '' : c.resolved,
+      ];
+    }
+    return base;
+  });
+
+  const wsData: unknown[][] = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData, { cellDates: true });
+
+  // Find the date column index and apply datetime format
+  const dateColIdx = hasThreading ? 3 : 1;
+  for (let r = 1; r <= rows.length; r++) {
+    const cellRef = XLSX.utils.encode_cell({ r, c: dateColIdx });
+    const cell = ws[cellRef];
+    if (cell && cell.t === 'd') {
+      cell.z = 'yyyy-mm-dd hh:mm';
+    }
+  }
 
   const colWidths = headers.map((h, i) => {
     const maxLen = Math.max(

@@ -77,4 +77,26 @@ describe('generateXlsxBlob', () => {
     expect(row).toContain('Check these numbers');
     expect(row).toContain('total allocation of $2.4M');
   });
+
+  it('uses native types: boolean for Reply/Resolved, date for Date', async () => {
+    const comments = [makeComment({ resolved: true, isReply: false })];
+    const blob = generateXlsxBlob(comments, true);
+    const buffer = await blob.arrayBuffer();
+    const wb = XLSX.read(buffer, { cellDates: true });
+    const ws = wb.Sheets['Comments'];
+
+    // Reply column (B2) should be boolean
+    const replyCell = ws['B2'];
+    expect(replyCell.t).toBe('b');
+    expect(replyCell.v).toBe(false);
+
+    // Resolved column (H2) should be boolean
+    const resolvedCell = ws['H2'];
+    expect(resolvedCell.t).toBe('b');
+    expect(resolvedCell.v).toBe(true);
+
+    // Date column (D2) should be date
+    const dateCell = ws['D2'];
+    expect(dateCell.t).toBe('d');
+  });
 });
