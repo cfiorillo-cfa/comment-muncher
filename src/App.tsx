@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 import type { ParseResult } from './types';
 import { parseDocx } from './parser/parse-docx';
+import { getAccessToken } from './google/auth';
+import { fetchGoogleDocComments } from './google/fetch-comments';
 import Header from './components/Header';
 import DropZone from './components/DropZone';
+import GoogleDocInput from './components/GoogleDocInput';
 import CommentTable from './components/CommentTable';
 import ExportButtons from './components/ExportButtons';
 import ErrorMessage from './components/ErrorMessage';
@@ -38,6 +41,26 @@ export default function App() {
     }
   }, []);
 
+  const handleGoogleImport = useCallback(async (url: string) => {
+    setState({ view: 'loading' });
+    try {
+      const token = await getAccessToken();
+      const result = await fetchGoogleDocComments(url, token);
+      if (result.comments.length === 0) {
+        setState({
+          view: 'error',
+          message: 'No comments found in this document',
+        });
+        return;
+      }
+      setState({ view: 'results', data: result });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Couldn't connect to Google. Please try again.";
+      setState({ view: 'error', message });
+    }
+  }, []);
+
   const handleError = useCallback((message: string) => {
     setState({ view: 'error', message });
   }, []);
@@ -52,14 +75,19 @@ export default function App() {
       {state.view === 'upload' && (
         <>
           <DropZone onFile={handleFile} onError={handleError} />
+          <GoogleDocInput
+            onImport={handleGoogleImport}
+            disabled={false}
+          />
           <div className="info-section">
             <h2 className="info-section__title">
               Extract comments from Word documents
             </h2>
             <p className="info-section__body">
-              Upload a <code>.docx</code> file and instantly see every comment
-              in a sortable table — who said what, when, on which text, and
-              whether it's been resolved. Export the full set as CSV or XLSX.
+              Upload a <code>.docx</code> file or paste a Google Doc URL to
+              instantly see every comment in a sortable table — who said what,
+              when, on which text, and whether it's been resolved. Export the
+              full set as CSV, XLSX, or Google Sheets.
             </p>
             <div className="info-section__features">
               <div className="info-section__feature">
@@ -72,16 +100,9 @@ export default function App() {
               <div className="info-section__feature">
                 <strong>Privacy first</strong>
                 <span>
-                  Everything runs in your browser. Your files are never uploaded
-                  to a server.
-                </span>
-              </div>
-              <div className="info-section__feature">
-                <strong>Using Google Docs?</strong>
-                <span>
-                  Go to File &gt; Download &gt; Microsoft Word (.docx) — your
-                  comments and replies will carry over. Native Google Docs and
-                  Sheets support is coming soon.
+                  DOCX files are processed entirely in your browser — never
+                  uploaded. Google Docs access goes through Google's API
+                  directly; Comment Muncher doesn't store your data.
                 </span>
               </div>
             </div>
@@ -101,7 +122,8 @@ export default function App() {
           <div className="results-header">
             <div className="results-header__info">
               <span className="results-header__filename">
-                {state.data.filename}.docx
+                {state.data.filename}
+                {!state.data.filename.includes('Google') && '.docx'}
               </span>
               <span className="results-header__count" aria-live="polite">
                 {state.data.comments.length} comment

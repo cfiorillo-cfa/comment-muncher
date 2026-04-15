@@ -1,28 +1,13 @@
 import * as XLSX from 'xlsx';
 import type { Comment } from '../types';
+import { buildExportData } from './build-rows';
 
 export function generateXlsxBlob(comments: Comment[], hasThreading: boolean): Blob {
-  const headers = hasThreading
-    ? ['Thread', 'Reply', 'Author', 'Date', 'Comment', 'Highlighted Text', 'Location', 'Resolved']
-    : ['Author', 'Date', 'Comment', 'Highlighted Text', 'Location'];
-
-  const rows = comments.map(c => {
-    const base = [c.author, c.date, c.text, c.highlightedContent, c.location];
-    if (hasThreading) {
-      return [
-        c.threadId,
-        c.isReply ? 'Yes' : 'No',
-        ...base,
-        c.resolved === null ? '' : c.resolved ? 'Yes' : 'No',
-      ];
-    }
-    return base;
-  });
+  const { headers, rows } = buildExportData(comments, hasThreading);
 
   const wsData = [headers, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  // Auto-size columns based on content width
   const colWidths = headers.map((h, i) => {
     const maxLen = Math.max(
       h.length,
