@@ -1,35 +1,55 @@
 # Comment Muncher
 
-A web app that extracts comments from documents (DOCX, potentially Google Docs) and exports them in structured formats (CSV, XLS, Google Sheets).
+A client-side web app that extracts comments from DOCX files and exports them as CSV/XLSX. Files never leave the browser.
 
 ## Project Context
 
 - **Org:** Code for America
 - **Owner:** cfiorillo-cfa
-- **Status:** Greenfield — design phase
+- **Stack:** React 18, TypeScript, Vite, JSZip, SheetJS, Vitest
 
 ## Design Language
 
-- USWDS (U.S. Web Design System) inspired UI
+- USWDS (U.S. Web Design System) inspired UI via CSS custom properties in `src/styles/tokens.css`
 - Accessible, clean, government-friendly aesthetic
+- CfA logo in header (`assets/cfa_logo.png`)
 
 ## Extracted Comment Fields
 
-- Highlighted content (the text the comment is anchored to)
-- Author (who left the comment)
+- Comment text (plain text, formatting stripped)
+- Highlighted content (text the comment is anchored to)
+- Author
 - Date/time
-- Comment text
-
-## Development Conventions
-
-- Tech stack TBD (will be decided during design phase)
-- Design specs live in `docs/superpowers/specs/`
-- Implementation plans live in `docs/superpowers/plans/`
+- Document location (nearest heading or paragraph number)
+- Reply threading (via commentsExtended.xml paraId linkage)
+- Resolved/open status
 
 ## Commands
 
-_None yet — will be added once the stack is chosen._
+- `npm run dev` — Start Vite dev server
+- `npm run build` — TypeScript check + production build
+- `npm run test` — Run Vitest in watch mode
+- `npm run test:run` — Run Vitest once
 
 ## Testing
 
-_TBD._
+- Vitest with jsdom environment
+- 39 tests across 7 test files
+- Parser tests use XML string fixtures; orchestrator tests create DOCX zips with JSZip
+- Export tests verify CSV escaping and XLSX structure via SheetJS read-back
+
+## Architecture
+
+```
+src/
+├── parser/       # DOCX parsing: comments.xml, document.xml, commentsExtended.xml
+├── export/       # CSV and XLSX generation + browser download trigger
+├── components/   # React components: Header, DropZone, CommentTable, ExportButtons, etc.
+├── styles/       # USWDS design tokens
+└── types.ts      # Shared TypeScript interfaces
+```
+
+## Design Specs & Plans
+
+- Design spec: `docs/superpowers/specs/2026-04-15-comment-muncher-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-04-15-comment-muncher.md`
