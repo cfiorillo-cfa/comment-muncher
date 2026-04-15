@@ -25,13 +25,23 @@ export function generateXlsxBlob(comments: Comment[], hasThreading: boolean): Bl
   const wsData: unknown[][] = [headers, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(wsData, { cellDates: true });
 
-  // Find the date column index and apply datetime format
-  const dateColIdx = hasThreading ? 3 : 1;
+  // Apply cell formats
   for (let r = 1; r <= rows.length; r++) {
-    const cellRef = XLSX.utils.encode_cell({ r, c: dateColIdx });
-    const cell = ws[cellRef];
-    if (cell && cell.t === 'd') {
-      cell.z = 'yyyy-mm-dd hh:mm';
+    // Date column — datetime format
+    const dateColIdx = hasThreading ? 3 : 1;
+    const dateRef = XLSX.utils.encode_cell({ r, c: dateColIdx });
+    const dateCell = ws[dateRef];
+    if (dateCell && dateCell.t === 'd') {
+      dateCell.z = 'yyyy-mm-dd hh:mm';
+    }
+
+    // Thread column — integer format (no decimals)
+    if (hasThreading) {
+      const threadRef = XLSX.utils.encode_cell({ r, c: 0 });
+      const threadCell = ws[threadRef];
+      if (threadCell && threadCell.t === 'n') {
+        threadCell.z = '0';
+      }
     }
   }
 
