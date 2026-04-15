@@ -49,7 +49,10 @@ export default function GoogleDocInput({ onImport, disabled }: GoogleDocInputPro
       </form>
       {error && <p className="google-import__error" role="alert">{error}</p>}
       <p className="google-import__note">
-        This connects to Google to access your documents. Comment Muncher doesn't store your data.
+        Google will ask for permission to view your Drive files and manage
+        spreadsheets. Comment Muncher only reads comments from the doc you
+        provide and only creates new spreadsheets for export — it never
+        browses, modifies, or deletes anything else. No data is stored.
       </p>
     </div>
   );
