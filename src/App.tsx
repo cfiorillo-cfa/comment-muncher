@@ -80,7 +80,8 @@ export default function App() {
                 <strong>Using Google Docs?</strong>
                 <span>
                   Go to File &gt; Download &gt; Microsoft Word (.docx) — your
-                  comments and replies will carry over.
+                  comments and replies will carry over. Native Google Docs and
+                  Sheets support is coming soon.
                 </span>
               </div>
             </div>
