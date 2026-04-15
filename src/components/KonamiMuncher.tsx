@@ -3,6 +3,8 @@ import './KonamiMuncher.css';
 
 const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 const TITLE = 'Comment Muncher';
+const LETTER_EAT_INTERVAL = 110;  // ms between each letter vanishing
+const LETTER_RESTORE_INTERVAL = 60;
 
 function playBlip() {
   try {
@@ -19,9 +21,7 @@ function playBlip() {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.08);
     setTimeout(() => ctx.close(), 200);
-  } catch {
-    // Silent fallback
-  }
+  } catch { /* silent */ }
 }
 
 function playRestore() {
@@ -39,17 +39,15 @@ function playRestore() {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.06);
     setTimeout(() => ctx.close(), 200);
-  } catch {
-    // Silent fallback
-  }
+  } catch { /* silent */ }
 }
 
 export default function KonamiMuncher() {
   const [, setSequence] = useState<string[]>([]);
   const [phase, setPhase] = useState<'idle' | 'eating' | 'rebuilding' | 'done'>('idle');
-  const [pacPos, setPacPos] = useState(-1);
-  const [eatenLetters, setEatenLetters] = useState<Set<number>>(new Set());
-  const prevPacPos = useRef(-1);
+  const [eatCount, setEatCount] = useState(0); // how many letters have been eaten (0 to TITLE.length)
+  const prevEatCount = useRef(0);
+  const titleRef = useRef<HTMLDivElement>(null);
 
   // Listen for Konami code
   useEffect(() => {
@@ -58,8 +56,7 @@ export default function KonamiMuncher() {
         const next = [...prev, e.key].slice(-KONAMI.length);
         if (next.length === KONAMI.length && next.every((k, i) => k === KONAMI[i])) {
           setTimeout(() => {
-            setPacPos(-1);
-            setEatenLetters(new Set());
+            setEatCount(0);
             setPhase('eating');
           }, 100);
         }
@@ -72,41 +69,23 @@ export default function KonamiMuncher() {
     }
   }, [phase]);
 
-  // Eating: pac-man advances, eats the letter it reaches
+  // Eating: letters vanish one at a time
   useEffect(() => {
     if (phase !== 'eating') return;
-    if (pacPos < TITLE.length - 1) {
-      const timer = setTimeout(() => {
-        setPacPos(i => {
-          const next = i + 1;
-          setEatenLetters(prev => new Set(prev).add(next));
-          return next;
-        });
-      }, 65);
+    if (eatCount < TITLE.length) {
+      const timer = setTimeout(() => setEatCount(c => c + 1), LETTER_EAT_INTERVAL);
       return () => clearTimeout(timer);
     } else {
-      // All eaten — pause, then rebuild
-      const timer = setTimeout(() => {
-        setPhase('rebuilding');
-      }, 600);
+      const timer = setTimeout(() => setPhase('rebuilding'), 500);
       return () => clearTimeout(timer);
     }
-  }, [phase, pacPos]);
+  }, [phase, eatCount]);
 
-  // Rebuilding: pac-man goes back, letters reappear as it passes
+  // Rebuilding: letters reappear one at a time from the end
   useEffect(() => {
     if (phase !== 'rebuilding') return;
-    if (pacPos >= 0) {
-      const timer = setTimeout(() => {
-        setPacPos(i => {
-          setEatenLetters(prev => {
-            const next = new Set(prev);
-            next.delete(i);
-            return next;
-          });
-          return i - 1;
-        });
-      }, 40);
+    if (eatCount > 0) {
+      const timer = setTimeout(() => setEatCount(c => c - 1), LETTER_RESTORE_INTERVAL);
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
@@ -114,54 +93,57 @@ export default function KonamiMuncher() {
         setTimeout(() => {
           setPhase('idle');
           setSequence([]);
-          setPacPos(-1);
-          setEatenLetters(new Set());
-          prevPacPos.current = -1;
+          setEatCount(0);
+          prevEatCount.current = 0;
         }, 1500);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [phase, pacPos]);
+  }, [phase, eatCount]);
 
   // Sound effects
   useEffect(() => {
-    if (phase === 'eating' && pacPos > prevPacPos.current) {
+    if (phase === 'eating' && eatCount > prevEatCount.current) {
       playBlip();
-    } else if (phase === 'rebuilding' && pacPos < prevPacPos.current) {
+    } else if (phase === 'rebuilding' && eatCount < prevEatCount.current) {
       playRestore();
     }
-    prevPacPos.current = pacPos;
-  }, [phase, pacPos]);
+    prevEatCount.current = eatCount;
+  }, [phase, eatCount]);
 
   const reset = useCallback(() => {
     setPhase('idle');
     setSequence([]);
-    setPacPos(-1);
-    setEatenLetters(new Set());
-    prevPacPos.current = -1;
+    setEatCount(0);
+    prevEatCount.current = 0;
   }, []);
 
   if (phase === 'idle' || phase === 'done') return null;
 
-  // Pac-man sits right on top of the current letter
-  const pacLeft = `${pacPos * 0.78}em`;
+  // Pac-man leads: position is 2 letters ahead of the last eaten letter
+  const pacLetterPos = phase === 'eating'
+    ? Math.min(eatCount + 2, TITLE.length)
+    : Math.max(eatCount - 2, -1);
 
   return (
     <div className="konami-overlay" onClick={reset}>
       <div className="konami-stage">
-        <div className="konami-title">
-          {TITLE.split('').map((char, i) => (
-            <span
-              key={i}
-              className={`konami-letter${eatenLetters.has(i) ? ' konami-letter--eaten' : ''}`}
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </span>
-          ))}
+        <div className="konami-title" ref={titleRef}>
+          {TITLE.split('').map((char, i) => {
+            const eaten = phase === 'eating' ? i < eatCount : i >= eatCount;
+            return (
+              <span
+                key={i}
+                className={`konami-letter${eaten ? ' konami-letter--eaten' : ''}`}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </span>
+            );
+          })}
         </div>
         <div
           className={`konami-pac ${phase === 'rebuilding' ? 'konami-pac--reverse' : 'konami-pac--forward'}`}
-          style={{ left: pacLeft }}
+          style={{ left: `${pacLetterPos * 1.85}rem` }}
         >
           <div className="konami-pac__body" />
         </div>

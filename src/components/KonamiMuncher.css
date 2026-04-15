@@ -35,7 +35,7 @@
 .konami-pac {
   position: absolute;
   top: 50%;
-  transition: left 0.05s linear;
+  transition: left 0.08s linear;
 }
 
 .konami-pac--forward {
