@@ -1,0 +1,47 @@
+:root {
+  --color-primary: #005ea2;
+  --color-primary-dark: #1a4480;
+  --color-base-darkest: #1b1b1b;
+  --color-base-dark: #565c65;
+  --color-base: #71767a;
+  --color-base-light: #a9aeb1;
+  --color-base-lighter: #dfe1e2;
+  --color-base-lightest: #f0f4f8;
+  --color-white: #ffffff;
+  --color-success: #2e6e2e;
+  --color-success-lighter: #ecf3ec;
+  --color-error: #b50909;
+  --color-error-lighter: #fce4e4;
+  --color-focus: #2491ff;
+  --font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --border-radius: 4px;
+  --focus-outline: 2px solid var(--color-focus);
+  --focus-offset: 2px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-base-darkest);
+  background: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
