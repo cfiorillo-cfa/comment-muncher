@@ -14,6 +14,13 @@ type SortDir = 'asc' | 'desc';
 export default function CommentTable({ comments, hasThreading }: CommentTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function handleCopy(key: string, text: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedId(key);
+    setTimeout(() => setCopiedId(null), 1500);
+  }
 
   const sorted = useMemo(() => {
     const copy = [...comments];
@@ -77,11 +84,27 @@ export default function CommentTable({ comments, hasThreading }: CommentTablePro
         <tbody>
           {sorted.map(comment => (
             <tr key={comment.id} className={comment.isReply ? 'reply-row' : ''}>
-              <td>
+              <td
+                className="copyable"
+                title="Click to copy"
+                onClick={() => handleCopy(`${comment.id}-text`, comment.text)}
+              >
                 {comment.isReply && <span className="reply-prefix" aria-label="Reply">&#8627;</span>}
                 {comment.text}
+                {copiedId === `${comment.id}-text` && (
+                  <span className="copied-tooltip">Copied!</span>
+                )}
               </td>
-              <td className="highlighted">{comment.highlightedContent}</td>
+              <td
+                className="highlighted copyable"
+                title="Click to copy"
+                onClick={() => handleCopy(`${comment.id}-highlight`, comment.highlightedContent ?? '')}
+              >
+                {comment.highlightedContent}
+                {copiedId === `${comment.id}-highlight` && (
+                  <span className="copied-tooltip">Copied!</span>
+                )}
+              </td>
               <td>{comment.author}</td>
               <td style={{ whiteSpace: 'nowrap' }}>{comment.dateDisplay}</td>
               <td>{comment.location}</td>
