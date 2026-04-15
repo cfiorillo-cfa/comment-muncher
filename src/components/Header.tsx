@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import cfaLogo from '../../assets/cfa_logo.png';
+import './Header.css';
 
 export default function Header() {
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
+  const [nomVisible, setNomVisible] = useState(false);
 
   useEffect(() => {
     if (isDark) {
@@ -15,7 +17,6 @@ export default function Header() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  // On mount, sync state with localStorage (handles initial load)
   useEffect(() => {
     const stored = localStorage.getItem('theme');
     if (stored === 'dark') {
@@ -23,58 +24,39 @@ export default function Header() {
     }
   }, []);
 
+  const handleTitleClick = useCallback(() => {
+    setNomVisible(true);
+    setTimeout(() => setNomVisible(false), 1200);
+  }, []);
+
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-3)',
-        padding: 'var(--space-4) var(--space-5)',
-        borderBottom: '2px solid var(--color-primary)',
-      }}
-    >
-      <img
-        src={cfaLogo}
-        alt="Code for America"
-        style={{ width: 32, height: 32, borderRadius: '50%' }}
-      />
-      <span
-        style={{
-          fontSize: 'var(--font-size-xl)',
-          fontWeight: 700,
-          color: 'var(--color-base-darkest)',
-        }}
-      >
-        Comment Muncher
-      </span>
-      <button
-        onClick={() => setIsDark((prev) => !prev)}
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        style={{
-          marginLeft: 'auto',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '1.25rem',
-          padding: 'var(--space-2)',
-          borderRadius: 'var(--border-radius)',
-          lineHeight: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background =
-            'var(--color-base-lighter)';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = 'none';
-        }}
-      >
-        {isDark ? '☀️' : '🌙'}
-      </button>
+    <header className="header">
+      <div className="header__gradient" />
+      <div className="header__content">
+        <img
+          src={cfaLogo}
+          alt="Code for America"
+          className="header__logo"
+        />
+        <span
+          className="header__title"
+          onClick={handleTitleClick}
+          style={{ cursor: 'default', userSelect: 'none', position: 'relative' }}
+        >
+          Comment Muncher
+          {nomVisible && (
+            <span className="header__nom">nom nom nom</span>
+          )}
+        </span>
+        <button
+          onClick={() => setIsDark((prev) => !prev)}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="header__theme-toggle"
+        >
+          {isDark ? '☀️' : '🌙'}
+        </button>
+      </div>
     </header>
   );
 }

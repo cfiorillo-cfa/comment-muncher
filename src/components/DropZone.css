@@ -26,6 +26,18 @@
   font-size: 48px;
   color: var(--color-primary);
   margin-bottom: var(--space-3);
+  transition: transform 0.2s ease;
+}
+
+.dropzone:hover .dropzone__icon {
+  animation: chomp 0.6s ease-in-out infinite;
+}
+
+@keyframes chomp {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-3deg); }
+  50% { transform: scale(1) rotate(0deg); }
+  75% { transform: scale(1.1) rotate(3deg); }
 }
 
 .dropzone__title {
