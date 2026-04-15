@@ -1,11 +1,14 @@
 import { useCallback, useState } from 'react';
-import type { ParseResult } from './types';
+import type { Comment, ParseResult } from './types';
 import { parseDocx } from './parser/parse-docx';
 import { getAccessToken } from './google/auth';
 import { fetchGoogleDocComments } from './google/fetch-comments';
 import Header from './components/Header';
 import DropZone from './components/DropZone';
 import GoogleDocInput from './components/GoogleDocInput';
+import SummaryBar from './components/SummaryBar';
+import FilterBar from './components/FilterBar';
+import CommentStats from './components/CommentStats';
 import CommentTable from './components/CommentTable';
 import ExportButtons from './components/ExportButtons';
 import ErrorMessage from './components/ErrorMessage';
@@ -19,16 +22,20 @@ type AppState =
 
 export default function App() {
   const [state, setState] = useState<AppState>({ view: 'upload' });
+  const [filteredComments, setFilteredComments] = useState<Comment[] | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleFile = useCallback(async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.docx')) {
+      setState({ view: 'error', message: 'Please upload a .docx file' });
+      return;
+    }
     setState({ view: 'loading' });
+    setFilteredComments(null);
     try {
       const result = await parseDocx(file);
       if (result.comments.length === 0) {
-        setState({
-          view: 'error',
-          message: 'No comments found in this document',
-        });
+        setState({ view: 'error', message: 'No comments found in this document' });
         return;
       }
       setState({ view: 'results', data: result });
@@ -43,14 +50,12 @@ export default function App() {
 
   const handleGoogleImport = useCallback(async (url: string) => {
     setState({ view: 'loading' });
+    setFilteredComments(null);
     try {
       const token = await getAccessToken();
       const result = await fetchGoogleDocComments(url, token);
       if (result.comments.length === 0) {
-        setState({
-          view: 'error',
-          message: 'No comments found in this document',
-        });
+        setState({ view: 'error', message: 'No comments found in this document' });
         return;
       }
       setState({ view: 'results', data: result });
@@ -67,11 +72,52 @@ export default function App() {
 
   const handleReset = useCallback(() => {
     setState({ view: 'upload' });
+    setFilteredComments(null);
   }, []);
 
+  // Drag-and-drop anywhere on the page
+  const handlePageDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
+
+  const handlePageDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+
+  const handlePageDragLeave = useCallback((e: React.DragEvent) => {
+    // Only trigger when leaving the app container itself
+    if (e.currentTarget === e.target) {
+      setDragOver(false);
+    }
+  }, []);
+
+  const displayComments =
+    state.view === 'results'
+      ? filteredComments ?? state.data.comments
+      : [];
+
   return (
-    <div className="app">
+    <div
+      className={`app${dragOver ? ' app--drag-over' : ''}`}
+      onDrop={handlePageDrop}
+      onDragOver={handlePageDragOver}
+      onDragLeave={handlePageDragLeave}
+    >
       <Header />
+      {dragOver && (
+        <div className="drag-overlay">
+          <div className="drag-overlay__content">
+            Drop your .docx file anywhere
+          </div>
+        </div>
+      )}
       {state.view === 'upload' && (
         <>
           <DropZone onFile={handleFile} onError={handleError} />
@@ -131,13 +177,26 @@ export default function App() {
               </span>
             </div>
             <ExportButtons
-              comments={state.data.comments}
+              comments={displayComments}
               filename={state.data.filename}
               hasThreading={state.data.hasThreading}
             />
           </div>
-          <CommentTable
+          <SummaryBar
             comments={state.data.comments}
+            hasThreading={state.data.hasThreading}
+          />
+          <FilterBar
+            comments={state.data.comments}
+            hasThreading={state.data.hasThreading}
+            onFilter={setFilteredComments}
+          />
+          <CommentStats
+            comments={state.data.comments}
+            hasThreading={state.data.hasThreading}
+          />
+          <CommentTable
+            comments={displayComments}
             hasThreading={state.data.hasThreading}
           />
           <div className="results-footer">

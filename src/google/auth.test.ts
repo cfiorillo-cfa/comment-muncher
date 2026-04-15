@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAccessToken, isAuthenticated, clearToken, _setTokenForTest } from './auth';
+
+vi.mock('./config', () => ({
+  GOOGLE_CLIENT_ID: '',
+  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/drive.readonly',
+}));
 
 describe('auth token management', () => {
   beforeEach(() => { clearToken(); });
