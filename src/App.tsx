@@ -50,7 +50,42 @@ export default function App() {
     <div className="app">
       <Header />
       {state.view === 'upload' && (
-        <DropZone onFile={handleFile} onError={handleError} />
+        <>
+          <DropZone onFile={handleFile} onError={handleError} />
+          <div className="info-section">
+            <h2 className="info-section__title">
+              Extract comments from Word documents
+            </h2>
+            <p className="info-section__body">
+              Upload a <code>.docx</code> file and instantly see every comment
+              in a sortable table — who said what, when, on which text, and
+              whether it's been resolved. Export the full set as CSV or XLSX.
+            </p>
+            <div className="info-section__features">
+              <div className="info-section__feature">
+                <strong>What's extracted</strong>
+                <span>
+                  Comment text, highlighted content, author, date, document
+                  location, reply threads, resolved/open status
+                </span>
+              </div>
+              <div className="info-section__feature">
+                <strong>Privacy first</strong>
+                <span>
+                  Everything runs in your browser. Your files are never uploaded
+                  to a server.
+                </span>
+              </div>
+              <div className="info-section__feature">
+                <strong>Using Google Docs?</strong>
+                <span>
+                  Go to File &gt; Download &gt; Microsoft Word (.docx) — your
+                  comments and replies will carry over.
+                </span>
+              </div>
+            </div>
+          </div>
+        </>
       )}
       {state.view === 'loading' && (
         <div className="loading" role="status" aria-live="polite">
