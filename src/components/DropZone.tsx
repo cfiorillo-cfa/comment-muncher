@@ -85,6 +85,7 @@ export default function DropZone({ onFile, onError }: DropZoneProps) {
           type="file"
           accept=".docx"
           onChange={handleChange}
+          onClick={e => e.stopPropagation()}
           style={{ display: 'none' }}
           aria-hidden="true"
           tabIndex={-1}
